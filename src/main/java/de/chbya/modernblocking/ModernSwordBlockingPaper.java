@@ -1,6 +1,7 @@
 package de.chbya.modernblocking;
 
 import org.bukkit.Bukkit;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
@@ -9,8 +10,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerKickEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -19,19 +18,25 @@ import org.jetbrains.annotations.Nullable;
 
 public class ModernSwordBlockingPaper extends JavaPlugin implements Listener {
     private static final long UPDATE_INTERVAL = 5L; // 20 ticks = 1 second
+    private ModernSwordBlockingConfig config;
 
     @Override
     public void onEnable() {
+        config = new ModernSwordBlockingConfig(this);
         getServer().getPluginManager().registerEvents(this, this);
         startInventoryUpdater();
+        PluginCommand msbCommand = getCommand("msb");
+        if (msbCommand != null) {
+            ModernSwordBlockingCommand commandExecutor = new ModernSwordBlockingCommand(config);
+            msbCommand.setExecutor(commandExecutor);
+            msbCommand.setTabCompleter(commandExecutor);
+        }
     }
 
-    /**
-     * Updates the necessary components on all swords in an inventory
-     *
-     * @param inventory the inventory
-     * @param add       whether to add or remove the component that allows blocking the sword
-     */
+    public ModernSwordBlockingConfig getConfigManager() {
+        return config;
+    }
+
     private static void updateAllItems(@NotNull Inventory inventory, boolean add) {
         for (@Nullable ItemStack stack : inventory.getContents()) {
             if (stack == null) continue;
@@ -40,37 +45,48 @@ public class ModernSwordBlockingPaper extends JavaPlugin implements Listener {
         }
     }
 
-    /**
-     * Starts a repeating task that updates all players' inventories to ensure sword components are added
-     */
     private void startInventoryUpdater() {
         Bukkit.getScheduler().runTaskTimer(this, () -> {
             for (Player player : Bukkit.getOnlinePlayers()) {
-                updateAllItems(player.getInventory(), true);
+                if (config.isSwordBlockingEnabled(player.getUniqueId())) {
+                    updateAllItems(player.getInventory(), true);
+                } else {
+                    updateAllItems(player.getInventory(), false);
+                }
             }
         }, 0L, UPDATE_INTERVAL);
     }
 
-    // When items transferred to player inventory, make swords blockable
-    // When items transferred to different inventory, remove component
     @EventHandler
     public void onInventoryUpdate(@NotNull InventoryClickEvent event) {
         if (event.getClickedInventory() == null) return;
         boolean isPlayerInventory = event.getClickedInventory().getHolder() instanceof Player;
-        updateAllItems(event.getClickedInventory(), isPlayerInventory);
+        if (isPlayerInventory) {
+            Player player = (Player) event.getClickedInventory().getHolder();
+            if (config.isSwordBlockingEnabled(player.getUniqueId())) {
+                updateAllItems(event.getClickedInventory(), true);
+            } else {
+                updateAllItems(event.getClickedInventory(), false);
+            }
+        }
     }
 
-    // When player joins, make all their swords blockable
     @EventHandler
     public void onJoin(@NotNull PlayerJoinEvent event) {
-        updateAllItems(event.getPlayer().getInventory(), true);
+        Player player = event.getPlayer();
+        if (config.isSwordBlockingEnabled(player.getUniqueId())) {
+            updateAllItems(player.getInventory(), true);
+        } else {
+            updateAllItems(player.getInventory(), false);
+        }
     }
 
-    // Reduce damage by 50% when sword is blocked
     @EventHandler
     public void onDamagePlayer(@NotNull EntityDamageEvent event) {
         if (event.getEntity() instanceof Player player) {
-            event.setDamage(event.getDamage() * ModernSwordBlocking.damageMultiplier(((CraftPlayer) player).getHandle()));
+            if (config.isSwordBlockingEnabled(player.getUniqueId())) {
+                event.setDamage(event.getDamage() * ModernSwordBlocking.damageMultiplier(((CraftPlayer) player).getHandle()));
+            }
         }
     }
 }
