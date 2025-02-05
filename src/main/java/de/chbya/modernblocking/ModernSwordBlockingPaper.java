@@ -55,7 +55,7 @@ public class ModernSwordBlockingPaper extends JavaPlugin implements Listener {
     private void startInventoryUpdater() {
         Bukkit.getScheduler().runTaskTimer(this, () -> {
             for (Player player : Bukkit.getOnlinePlayers()) {
-                if (config.isSwordBlockingEnabled(player.getUniqueId())) {
+                if (config.isWorldEnabled(player.getWorld().getName()) && config.isSwordBlockingEnabled(player.getUniqueId())) {
                     updateAllItems(player.getInventory(), true);
                 } else {
                     updateAllItems(player.getInventory(), false);
@@ -70,7 +70,7 @@ public class ModernSwordBlockingPaper extends JavaPlugin implements Listener {
         boolean isPlayerInventory = event.getClickedInventory().getHolder() instanceof Player;
         if (isPlayerInventory) {
             Player player = (Player) event.getClickedInventory().getHolder();
-            if (config.isSwordBlockingEnabled(player.getUniqueId())) {
+            if (config.isWorldEnabled(player.getWorld().getName()) && config.isSwordBlockingEnabled(player.getUniqueId())) {
                 updateAllItems(event.getClickedInventory(), true);
             } else {
                 updateAllItems(event.getClickedInventory(), false);
@@ -81,7 +81,7 @@ public class ModernSwordBlockingPaper extends JavaPlugin implements Listener {
     @EventHandler
     public void onJoin(@NotNull PlayerJoinEvent event) {
         Player player = event.getPlayer();
-        if (config.isSwordBlockingEnabled(player.getUniqueId())) {
+        if (config.isWorldEnabled(player.getWorld().getName()) && config.isSwordBlockingEnabled(player.getUniqueId())) {
             updateAllItems(player.getInventory(), true);
         } else {
             updateAllItems(player.getInventory(), false);
@@ -91,7 +91,7 @@ public class ModernSwordBlockingPaper extends JavaPlugin implements Listener {
     @EventHandler
     public void onDamagePlayer(@NotNull EntityDamageEvent event) {
         if (event.getEntity() instanceof Player player) {
-            if (config.isSwordBlockingEnabled(player.getUniqueId())) {
+            if (config.isWorldEnabled(player.getWorld().getName()) && config.isSwordBlockingEnabled(player.getUniqueId())) {
                 event.setDamage(event.getDamage() * ModernSwordBlocking.damageMultiplier(((CraftPlayer) player).getHandle()));
             }
         }

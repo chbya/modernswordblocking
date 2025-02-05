@@ -4,12 +4,14 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 public class ModernSwordBlockingConfig {
     private final JavaPlugin plugin;
     private final Map<UUID, Boolean> playerBlockingEnabled = new HashMap<>();
+    private List<String> enabledWorlds;
 
     public ModernSwordBlockingConfig(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -19,6 +21,7 @@ public class ModernSwordBlockingConfig {
     public void loadConfig() {
         plugin.saveDefaultConfig();
         FileConfiguration config = plugin.getConfig();
+        enabledWorlds = config.getStringList("enabled-worlds");
         for (String key : config.getConfigurationSection("players").getKeys(false)) {
             UUID playerUUID = UUID.fromString(key);
             boolean enabled = config.getBoolean("players." + key + ".swordBlockingEnabled", true);
@@ -35,5 +38,9 @@ public class ModernSwordBlockingConfig {
         FileConfiguration config = plugin.getConfig();
         config.set("players." + playerUUID + ".swordBlockingEnabled", enabled);
         plugin.saveConfig();
+    }
+
+    public boolean isWorldEnabled(String worldName) {
+        return enabledWorlds.contains(worldName);
     }
 }
