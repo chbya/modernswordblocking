@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "de.chbya.modernblocking"
-version = "1.0.1"
+version = "1.0.3"
 description = "swing swung"
 
 java {
@@ -43,8 +43,9 @@ tasks {
 // Configure plugin.yml generation
 // - name, version, and description are inherited from the Gradle project.
 bukkitPluginYaml {
-    main = "de.chbya.modernblocking.ModernSwordBlockingPaper"
+    main = "de.chbya.modernblocking.ModernBlockingPaper"
     load = BukkitPluginYaml.PluginLoadOrder.STARTUP
     authors.add("chbya")
     apiVersion = "1.21"
+
 }
