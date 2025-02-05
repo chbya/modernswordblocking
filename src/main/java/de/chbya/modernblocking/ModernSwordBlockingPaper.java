@@ -39,9 +39,16 @@ public class ModernSwordBlockingPaper extends JavaPlugin implements Listener {
 
     private static void updateAllItems(@NotNull Inventory inventory, boolean add) {
         for (@Nullable ItemStack stack : inventory.getContents()) {
-            if (stack == null) continue;
-            if (add) ModernSwordBlocking.addSwordComponents(((CraftItemStack) stack).handle);
-            else ModernSwordBlocking.removeSwordComponents(((CraftItemStack) stack).handle);
+            try {
+                if (stack == null || !(stack instanceof CraftItemStack craftStack)) continue;
+                if (add) {
+                    ModernSwordBlocking.addSwordComponents(craftStack.handle);
+                } else {
+                    ModernSwordBlocking.removeSwordComponents(craftStack.handle);
+                }
+            } catch (Exception ignored) {
+                // Ignore all exceptions to prevent console errors
+            }
         }
     }
 
